@@ -14,6 +14,7 @@ jobs:
         sudo rm -rf /var/lib/apt/lists/*
         sudo sed -i 's/jammy/.\/devel/g' /etc/apt/sources.list
         sudo apt-get update && sudo apt-get install gnupg2 libadwaita-1-dev libatk1.0-dev libcairo2-dev libclang-15-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libgraphene-1.0-dev libgtk-3-dev libgtk-4-dev libpango1.0-dev golang-go pkg-config -y
+        cargo update -p proc-macro2
 
     - name: Install Just
       uses: taiki-e/install-action@just
@@ -39,6 +40,7 @@ jobs:
         sudo rm -rf /var/lib/apt/lists/*
         sudo sed -i 's/jammy/.\/devel/g' /etc/apt/sources.list
         sudo apt-get update && sudo apt-get install gnupg2 libadwaita-1-dev libatk1.0-dev libcairo2-dev libclang-15-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libgraphene-1.0-dev libgtk-3-dev libgtk-4-dev libpango1.0-dev golang-go pkg-config -y
+        cargo update -p proc-macro2
 
     - name: Install Just
       uses: taiki-e/install-action@just
