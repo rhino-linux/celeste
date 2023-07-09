@@ -9,18 +9,21 @@ jobs:
     steps:
     - uses: actions/checkout@v3.1.0
 
-    - name: Setup makedeb APT repositories
-      uses: makedeb/setup-makedeb@main
-
-    - name: Install needed packages
+    - name: Install needed packages, pt 1
       run: |
         sudo rm -rf /var/lib/apt/lists/*
         sudo sed -i 's/jammy/.\/devel/g' /etc/apt/sources.list
+        sudo apt-get update && sudo apt-get install gnupg2 libadwaita-1-dev libatk1.0-dev libcairo2-dev libclang-15-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libgraphene-1.0-dev libgtk-3-dev libgtk-4-dev libpango1.0-dev golang-go pkg-config -y
+
+    - name: Setup makedeb APT repositories
+      uses: makedeb/setup-makedeb@main
+
+    - name: Install needed packages, pt 2
+      run: |
         for pkg in rustup just; do
           git clone "https://mpr.makedeb.org/${pkg}"
           makedeb -si --no-confirm
         done
-        sudo apt-get update && sudo apt-get install just libadwaita-1-dev libatk1.0-dev libcairo2-dev libclang-15-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libgraphene-1.0-dev libgtk-3-dev libgtk-4-dev libpango1.0-dev golang-go pkg-config rustup -y
 
     - name: Setup
       run: sudo just build && mkdir -p builds/amd64
@@ -38,18 +41,21 @@ jobs:
     steps:
     - uses: actions/checkout@v3.1.0
 
-    - name: Setup makedeb APT repositories
-      uses: makedeb/setup-makedeb@main
-
-    - name: Install needed packages
+    - name: Install needed packages, pt 1
       run: |
         sudo rm -rf /var/lib/apt/lists/*
         sudo sed -i 's/jammy/.\/devel/g' /etc/apt/sources.list
+        sudo apt-get update && sudo apt-get install gnupg2 libadwaita-1-dev libatk1.0-dev libcairo2-dev libclang-15-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libgraphene-1.0-dev libgtk-3-dev libgtk-4-dev libpango1.0-dev golang-go pkg-config -y
+
+    - name: Setup makedeb APT repositories
+      uses: makedeb/setup-makedeb@main
+
+    - name: Install needed packages, pt 2
+      run: |
         for pkg in rustup just; do
           git clone "https://mpr.makedeb.org/${pkg}"
           makedeb -si --no-confirm
         done
-        sudo apt-get update && sudo apt-get install just libadwaita-1-dev libatk1.0-dev libcairo2-dev libclang-15-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libgraphene-1.0-dev libgtk-3-dev libgtk-4-dev libpango1.0-dev golang-go pkg-config rustup -y
 
     - name: Setup
       run: sudo just build && mkdir -p builds/arm64
