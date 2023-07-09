@@ -1,0 +1,49 @@
+name: Celeste Binary Generation
+
+on:
+  workflow_dispatch
+
+jobs:
+  build_amd64:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    steps:
+    - uses: actions/checkout@v3.1.0
+
+    - name: Install needed packages
+      run: |
+        sudo rm -rf /var/lib/apt/lists/*
+        sudo sed -i 's/jammy/.\/devel/g' /etc/apt/sources.list
+        sudo apt-get update && sudo apt-get install just libadwaita-1-dev libatk1.0-dev libcairo2-dev libclang-15-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libgraphene-1.0-dev libgtk-3-dev libgtk-4-dev libpango1.0-dev golang-go pkg-config rustup -y
+
+    - name: Setup
+      run: sudo just build && mkdir -p builds/amd64
+
+    - name: Build
+      run: sudo DESTDIR="builds/amd64" just install
+
+    - uses: actions/upload-artifact@v3.1.2
+      with:
+        name: Celeste (AMD64)
+        path: builds/amd64/
+        
+  build_arm64:
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    steps:
+    - uses: actions/checkout@v3.1.0
+
+    - name: Install needed packages
+      run: |
+        sudo rm -rf /var/lib/apt/lists/*
+        sudo sed -i 's/jammy/.\/devel/g' /etc/apt/sources.list
+        sudo apt-get update && sudo apt-get install just libadwaita-1-dev libatk1.0-dev libcairo2-dev libclang-15-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libgraphene-1.0-dev libgtk-3-dev libgtk-4-dev libpango1.0-dev golang-go pkg-config rustup -y
+
+    - name: Setup
+      run: sudo just build && mkdir -p builds/arm64
+
+    - name: Build
+      run: sudo DESTDIR="builds/arm64" just install
+
+    - uses: actions/upload-artifact@v3.1.2
+      with:
+        name: Celeste (ARM64)
+        path: builds/arm64/
