@@ -19,10 +19,10 @@ jobs:
       uses: taiki-e/install-action@just
 
     - name: Setup
-      run: sudo just build && mkdir -p builds/amd64
+      run: just build && mkdir -p builds/amd64
 
     - name: Build
-      run: sudo DESTDIR="builds/amd64" just install
+      run: DESTDIR="builds/amd64" just install
 
     - uses: actions/upload-artifact@v3.1.2
       with:
@@ -44,10 +44,10 @@ jobs:
       uses: taiki-e/install-action@just
 
     - name: Setup
-      run: sudo just build && mkdir -p builds/arm64
+      run: just build && mkdir -p builds/arm64
 
     - name: Build
-      run: sudo DESTDIR="builds/arm64" just install
+      run: DESTDIR="builds/arm64" just install
 
     - uses: actions/upload-artifact@v3.1.2
       with:
