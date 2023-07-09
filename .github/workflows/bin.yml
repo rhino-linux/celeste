@@ -22,7 +22,9 @@ jobs:
       run: |
         for pkg in rustup just; do
           git clone "https://mpr.makedeb.org/${pkg}"
-          makedeb -si --no-confirm
+            cd "${pkg}/"
+            makedeb -si --no-confirm
+            cd ../
         done
 
     - name: Setup
@@ -54,7 +56,9 @@ jobs:
       run: |
         for pkg in rustup just; do
           git clone "https://mpr.makedeb.org/${pkg}"
-          makedeb -si --no-confirm
+            cd "${pkg}/"
+            makedeb -si --no-confirm
+            cd ../
         done
 
     - name: Setup
