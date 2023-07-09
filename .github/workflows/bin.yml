@@ -9,11 +9,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3.1.0
 
+    - name: Setup makedeb APT repositories
+      uses: makedeb/setup-makedeb@main
+
     - name: Install needed packages
       run: |
         sudo rm -rf /var/lib/apt/lists/*
         sudo sed -i 's/jammy/.\/devel/g' /etc/apt/sources.list
-        bash -c "$(wget -qO - 'https://shlink.makedeb.org/install')"
         for pkg in rustup just; do
           git clone "https://mpr.makedeb.org/${pkg}"
           makedeb -si --no-confirm
@@ -36,11 +38,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3.1.0
 
+    - name: Setup makedeb APT repositories
+      uses: makedeb/setup-makedeb@main
+
     - name: Install needed packages
       run: |
         sudo rm -rf /var/lib/apt/lists/*
         sudo sed -i 's/jammy/.\/devel/g' /etc/apt/sources.list
-        bash -c "$(wget -qO - 'https://shlink.makedeb.org/install')"
         for pkg in rustup just; do
           git clone "https://mpr.makedeb.org/${pkg}"
           makedeb -si --no-confirm
