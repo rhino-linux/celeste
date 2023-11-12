@@ -4,14 +4,16 @@ use crate::{
     gtk_util,
     mpsc::{self, Sender},
     rclone,
+    traits::prelude::*,
+    util,
 };
-use libceleste::traits::prelude::*;
 mod dropbox;
 mod gdrive;
 pub mod login_util;
 mod nextcloud;
 mod owncloud;
 mod pcloud;
+mod proton_drive;
 mod webdav;
 
 use adw::{
@@ -25,6 +27,7 @@ use gdrive::GDriveConfig;
 use nextcloud::NextcloudConfig;
 use owncloud::OwncloudConfig;
 use pcloud::PCloudConfig;
+use proton_drive::ProtonDriveConfig;
 use std::{cell::RefCell, rc::Rc};
 use webdav::WebDavConfig;
 
@@ -47,6 +50,7 @@ pub enum ServerType {
     Nextcloud(nextcloud::NextcloudConfig),
     Owncloud(owncloud::OwncloudConfig),
     PCloud(pcloud::PCloudConfig),
+    ProtonDrive(proton_drive::ProtonDriveConfig),
     WebDav(webdav::WebDavConfig),
 }
 
@@ -58,6 +62,7 @@ impl ToString for ServerType {
             Self::Nextcloud(_) => "Nextcloud",
             Self::Owncloud(_) => "Owncloud",
             Self::PCloud(_) => "pCloud",
+            Self::ProtonDrive(_) => "Proton Drive",
             Self::WebDav(_) => "WebDAV",
         }
         .to_string()
@@ -71,6 +76,8 @@ pub fn can_login(_app: &Application, config_name: &str) -> bool {
             tr::tr!(
                 "Unable to connect to the server. Check your internet connection and try again."
             )
+        } else if err.error.contains("this account requires a 2FA code") {
+            tr::tr!("A 2FA code is required to log in to this account. Provide one and try again.")
         } else {
             tr::tr!(
                 "Unable to authenticate to the server. Check your login credentials and try again."
@@ -95,7 +102,7 @@ pub fn login(app: &Application, db: &DatabaseConnection) -> Option<RemotesModel>
     // The window.
     let window = ApplicationWindow::builder()
         .application(app)
-        .title(&libceleste::get_title!("Log in"))
+        .title(&util::get_title!("Log in"))
         .width_request(400)
         .build();
     window.add_css_class("celeste-global-padding");
@@ -110,6 +117,7 @@ pub fn login(app: &Application, db: &DatabaseConnection) -> Option<RemotesModel>
     let nextcloud_name = ServerType::Nextcloud(Default::default()).to_string();
     let owncloud_name = ServerType::Owncloud(Default::default()).to_string();
     let pcloud_name = ServerType::PCloud(Default::default()).to_string();
+    let proton_drive_name = ServerType::ProtonDrive(Default::default()).to_string();
     let webdav_name = ServerType::WebDav(Default::default()).to_string();
 
     // The dropdown for selecting the server type.
@@ -120,6 +128,7 @@ pub fn login(app: &Application, db: &DatabaseConnection) -> Option<RemotesModel>
         nextcloud_name.as_str(),
         owncloud_name.as_str(),
         pcloud_name.as_str(),
+        proton_drive_name.as_str(),
         webdav_name.as_str(),
     ];
     let server_types = StringList::new(&server_types_array);
@@ -145,6 +154,7 @@ pub fn login(app: &Application, db: &DatabaseConnection) -> Option<RemotesModel>
     let nextcloud_items = NextcloudConfig::get_sections(&window, sender.clone());
     let owncloud_items = OwncloudConfig::get_sections(&window, sender.clone());
     let pcloud_items = PCloudConfig::get_sections(&window, sender.clone());
+    let proton_drive_items = ProtonDriveConfig::get_sections(&window, sender.clone());
     let webdav_items = WebDavConfig::get_sections(&window, sender);
 
     // Store the active items.
@@ -162,6 +172,7 @@ pub fn login(app: &Application, db: &DatabaseConnection) -> Option<RemotesModel>
             "nextcloud" => nextcloud_items.clone(),
             "owncloud" => owncloud_items.clone(),
             "pcloud" => pcloud_items.clone(),
+            "proton drive" => proton_drive_items.clone(),
             "webdav" => webdav_items.clone(),
             _ => unreachable!()
         };
@@ -213,6 +224,7 @@ pub fn login(app: &Application, db: &DatabaseConnection) -> Option<RemotesModel>
             ServerType::Nextcloud(config) => config.server_name.clone(),
             ServerType::Owncloud(config) => config.server_name.clone(),
             ServerType::PCloud(config) => config.server_name.clone(),
+            ServerType::ProtonDrive(config) => config.server_name.clone(),
             ServerType::WebDav(config) => config.server_name.clone(),
         };
 
@@ -276,6 +288,18 @@ pub fn login(app: &Application, db: &DatabaseConnection) -> Option<RemotesModel>
                     "obscure": true
                 }
             }),
+            ServerType::ProtonDrive(config) => json!({
+                "name": config_name,
+                "parameters": {
+                    "username": config.username,
+                    "password": config.password,
+                    "2fa": config.totp
+                },
+                "type": "protondrive",
+                "opt": {
+                    "obscure": true
+                }
+            }),
             ServerType::WebDav(config) => json!({
                 "name": config_name,
                 "parameters": {
@@ -291,21 +315,21 @@ pub fn login(app: &Application, db: &DatabaseConnection) -> Option<RemotesModel>
             }),
         };
 
-        libceleste::run_in_background(move || {
+        util::run_in_background(move || {
             librclone::rpc("config/create", config_query.to_string()).unwrap()
         });
 
         // If we can't connect to the server, assume invalid credentials were given,
         // remote the config, and try asking for input again.
         if !can_login(app, &config_name) {
-            libceleste::run_in_background(move || {
+            util::run_in_background(move || {
                 librclone::rpc("config/delete", json!({ "name": config_name }).to_string()).unwrap()
             });
             window.set_sensitive(true);
         // We've passed validation otherwise, so add the remote to the db, close
         // the window and return the config.
         } else {
-            let model = libceleste::await_future(
+            let model = util::await_future(
                 RemotesActiveModel {
                     name: ActiveValue::Set(config_name),
                     ..Default::default()

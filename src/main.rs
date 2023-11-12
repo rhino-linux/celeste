@@ -13,6 +13,9 @@ pub mod login;
 pub mod migrations;
 pub mod mpsc;
 pub mod rclone;
+pub mod traits;
+pub mod tray;
+pub mod util;
 
 use adw::{
     gtk::{self, gdk::Display, Align, Box, CssProvider, Label, Orientation, StyleContext},
@@ -53,14 +56,14 @@ fn main() {
     gtk::init().unwrap();
 
     // Configure Rclone.
-    let mut config = libceleste::get_config_dir();
+    let mut config = util::get_config_dir();
     config.push("rclone.conf");
     librclone::initialize();
     librclone::rpc("config/setpath", json!({ "path": config }).to_string()).unwrap();
 
     // Load our CSS.
     let provider = CssProvider::new();
-    provider.load_from_data(include_bytes!("style.css"));
+    provider.load_from_data(include_bytes!(concat!(env!("OUT_DIR"), "/style.css")));
 
     StyleContext::add_provider_for_display(
         &Display::default().unwrap(),
@@ -69,9 +72,7 @@ fn main() {
     );
 
     // Get the application.
-    let app = Application::builder()
-        .application_id(libceleste::APP_ID)
-        .build();
+    let app = Application::builder().application_id(util::APP_ID).build();
 
     // Due to GTK working in Rust via Rust's FFI, panics don't appear to be able to
     // be captured (this hasn't been confirmed behavior, it's just what I've
@@ -147,7 +148,7 @@ fn main() {
         let _stdout = stdout_thread.join().unwrap();
         let stderr = stderr_thread.join().unwrap();
 
-        let backtrace = {
+        let maybe_backtrace = {
             let mut backtrace = String::new();
             let mut backtrace_found = false;
 
@@ -172,11 +173,11 @@ fn main() {
         };
 
         // Show the backtrace in the GUI if one was found.
-        if backtrace.is_some() {
+        if let Some(backtrace) = maybe_backtrace {
             app.connect_activate(move |app| {
                 let window = ApplicationWindow::builder()
                     .application(app)
-                    .title(&libceleste::get_title!("Unknown Error"))
+                    .title(&util::get_title!("Unknown Error"))
                     .build();
                 window.add_css_class("celeste-global-padding");
                 let sections = Box::builder()
@@ -198,7 +199,7 @@ fn main() {
                     .yalign(0.0)
                     .build();
                 sections.append(&error_text);
-                sections.append(&gtk_util::codeblock(backtrace.as_ref().unwrap()));
+                sections.append(&gtk_util::codeblock(&backtrace));
 
                 window.set_content(Some(&sections));
                 window.show();
