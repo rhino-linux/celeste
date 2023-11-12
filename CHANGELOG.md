@@ -6,6 +6,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2023-10-23
+### Changed
+- Added functionality to only run sync checks when files are changed.
+
+## [0.7.0] - 2023-10-07
+### Changed
+- Remove reliance on GTK3 and libappindicator.
+- Make tray functionality part of main application, instead of being a separate app.
+- Combine all application functionality into a singular crate.
+
+### Fixed
+- Fixed incorrect number of errors being reported in tray.
+- Fixed bug where tray icons would never change.
+
+## [0.6.0] - 2023-10-05
+### Added
+- Added Proton Drive support.
+
+### Fixed
+- Fixed missing `description` tags in metainfo's `releases` section.
+
+## [0.5.8] - 2023-09-16
+### Added
+- Added release notes to about page.
+
+## [0.5.7] - 2023-09-15
+### Fixed
+- Removed duplicate releases in AppStream metadata file.
+
+## [0.5.6] - 2023-09-14
+### Changed
+- Changed to new application icons.
+- Added credits to about page.
+
 ## [0.5.5] - 2023-08-09
 ### Fixed
 - Update `Cargo.toml` and `Cargo.lock` to fix `arm64` compile error.
